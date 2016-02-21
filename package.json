@@ -1,6 +1,6 @@
 {
 	"name": "songtools",
-	"displayName": "songtools",
+	"displayName": "Song Tools",
 	"description": "Tools for working with chords and lyrics.",
 	"version": "0.0.1",
 	"publisher": "craiggwilson",
@@ -8,25 +8,56 @@
 		"vscode": "^0.10.6"
 	},
 	"categories": [
-		"Other"
+		"Languages"
 	],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/songtools/vscode"
+    },
 	"activationEvents": [
-		"onCommand:extension.sayHello"
+        "onLanguage:chordsOverLyrics",
+        "onCommand:songtools.formatChordsOverLyrics",
+		"onCommand:songtools.transpose"
 	],
-	"main": "./out/src/extension",
+	"main": "./out/src/main",
 	"contributes": {
-		"commands": [{
-			"command": "extension.sayHello",
-			"title": "Hello World"
-		}]
+        "languages": [
+            {
+                "id": "chordsOverLyrics",
+                "extensions": [".txt"],
+                "aliases": ["Chords Over Lyrics"]
+            }],
+		"commands": [
+            {
+                "command": "songtools.formatChordsOverLyrics",
+                "title": "Format Song as Chords Over Lyrics"
+		    },
+            {
+                "command": "songtools.transpose",
+                "title": "Transpose Song"
+            }]
 	},
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install"
 	},
+    "dependencies": {
+        "diff-match-patch": "~1.0.0"
+    },
 	"devDependencies": {
 		"typescript": "^1.7.5",
 		"vscode": "^0.11.0"
-	}
+	},
+    "configuration": {
+        "type": "object",
+        "title": "SongTools configuration",
+        "properties": {
+            "songtools.formatOnSave": {
+                "type": "boolean",
+                "default": true,
+                "description": "Runs 'songfmt' on save."
+            }
+        }
+    }
 }
