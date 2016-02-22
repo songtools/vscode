@@ -51,7 +51,7 @@
 	},
     "configuration": {
         "type": "object",
-        "title": "SongTools configuration",
+        "title": "Song Tools configuration",
         "properties": {
             "songtools.formatOnSave": {
                 "type": "boolean",
