@@ -2,20 +2,14 @@
 import * as vscode from 'vscode';
 import { CHORDSOVERLYRICS_MODE } from './mode';
 import { SongToolsDocumentFormattingEditProvider, Formatter } from './format';
+import { SongToolsPreviewContentProvider } from './preview';
 
 export function activate(context: vscode.ExtensionContext) {
-    
-    context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(CHORDSOVERLYRICS_MODE, new SongToolsDocumentFormattingEditProvider()));
-    startBuildOnSaveWatcher(context.subscriptions);
-    
-    vscode.commands.registerCommand('songtools.formatChordsOverLyrics', () => {
-		vscode.window.showInformationMessage('Formatting as ChordsOverLyrics!');
-	});
 
-	vscode.commands.registerCommand('songtools.transpose', () => {
-		vscode.window.showInformationMessage('Tranposing!');
-	});
-    
+    registerFormatting(context);
+    registerPreviewing(context);
+
+
     vscode.languages.setLanguageConfiguration(CHORDSOVERLYRICS_MODE.language, {
         comments: {
             lineComment: '//',
@@ -32,35 +26,48 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-function startBuildOnSaveWatcher(subscriptions: vscode.Disposable[]) {
+function registerFormatting(context: vscode.ExtensionContext) {
+    context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(CHORDSOVERLYRICS_MODE, new SongToolsDocumentFormattingEditProvider()));
 
-	// TODO: This is really ugly.  I'm not sure we can do better until
-	// Code supports a pre-save event where we can do the formatting before
-	// the file is written to disk.	
-	let ignoreNextSave = new WeakSet<vscode.TextDocument>();
+    vscode.commands.registerCommand('songtools.format', () => {
+        if (vscode.window.activeTextEditor == null) {
+            return;
+        }
 
-	vscode.workspace.onDidSaveTextDocument(document => {
-		if (document.languageId !== 'chordsOverLyrics' || ignoreNextSave.has(document)) {
-			return;
-		}
-		let config = vscode.workspace.getConfiguration('songtools');
-		let textEditor = vscode.window.activeTextEditor;
-		let formatPromise: PromiseLike<void> = Promise.resolve();
-		if (config['formatOnSave'] && textEditor.document === document) {
-			let formatter = new Formatter(document.languageId);
-			formatPromise = formatter.formatDocument(document).then(edits => {
-				return textEditor.edit(editBuilder => {
-					edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
-				});
-			}).then(applied => {
-				ignoreNextSave.add(document);
-				return document.save();
-			}).then(() => {
-				ignoreNextSave.delete(document);
-			}, () => {
-				// Catch any errors and ignore so that we still trigger 
-				// the file save.
-			});
-		}
-	}, null, subscriptions);
+        vscode.window.showQuickPick([CHORDSOVERLYRICS_MODE.language]).then(pick => {
+            return new Formatter().formatDocument(pick, vscode.window.activeTextEditor.document);
+        }).then(edits => {
+            return vscode.window.activeTextEditor.edit(builder => {
+                edits.forEach(edit => builder.replace(edit.range, edit.newText));
+            });
+        }, error => {
+            vscode.window.showErrorMessage("Unable to format song: " + error);
+        });
+    });
+}
+
+function registerPreviewing(context: vscode.ExtensionContext) {
+    let previewUri = vscode.Uri.parse('songtools-preview://authority/songtools-preview')
+    let songToolsPreviewProvider = new SongToolsPreviewContentProvider();
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(previewUri.scheme, songToolsPreviewProvider));
+
+    let previewDocument = function(document: vscode.TextDocument) {
+        if (document === vscode.window.activeTextEditor.document) {
+            songToolsPreviewProvider.update(previewUri);
+        }
+    }
+
+    vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+        previewDocument(e.document);
+    });
+    vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
+        previewDocument(e.document);
+    });
+    
+    vscode.commands.registerCommand('songtools.showPreview', () => {
+        return vscode.commands.executeCommand('vscode.previewHtml', previewUri, vscode.ViewColumn.Two).then((success) => {
+        }, (error) => {
+            vscode.window.showErrorMessage(error);
+        });
+    });
 }

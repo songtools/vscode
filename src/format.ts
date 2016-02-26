@@ -35,18 +35,12 @@ class Edit {
 
 export class Formatter {
     private formatCommand = "songfmt";
-    private format = "chordsOverLyrics";
-
-    constructor(format: string) {
-        this.format = format;
-    }
     
-    public formatDocument(document: vscode.TextDocument): Thenable<vscode.TextEdit[]> {
+    public formatDocument(format: string, document: vscode.TextDocument): Thenable<vscode.TextEdit[]> {
         return new Promise((resolve, reject) => {
-            let filename = document.fileName;
             let formatCommandBinPath = getBinPath(this.formatCommand);
             
-            cp.execFile(formatCommandBinPath, [filename], {}, (err, stdout, stderr) => {
+            let program = cp.execFile(formatCommandBinPath, ["--infmt", document.languageId, "--outfmt", format], (err, stdout, stderr) => {
                 try {
                     if (err && (<any>err).code === 'ENOENT') {
                         vscode.window.showInformationMessage('The "' + formatCommandBinPath + '" command is not available.');
@@ -56,6 +50,11 @@ export class Formatter {
                         return reject('Cannot format due to syntax errors.');
                     }
                     
+                    let errorString = stderr.toString();
+                    if(errorString !== "") {
+                        return reject(errorString);
+                    }
+                                        
                     let text = stdout.toString();
                     let d = new dmp.diff_match_patch();
                     
@@ -117,20 +116,16 @@ export class Formatter {
                     reject(e);
                 }
             });
+            
+            program.stdin.end(document.getText());
         });
     }
 }
 
 export class SongToolsDocumentFormattingEditProvider implements vscode.DocumentFormattingEditProvider {
-    private formatter: Formatter;
-    
-    constructor() {
-        this.formatter = new Formatter("chordsOverLyrics");
-    }
+    private formatter: Formatter = new Formatter();
     
     public provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken): Thenable<vscode.TextEdit[]> {
-        return document.save().then(() => {
-            return this.formatter.formatDocument(document);
-        })
+        return this.formatter.formatDocument(document.languageId, document);
     }
 }
