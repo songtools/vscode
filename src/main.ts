@@ -56,7 +56,7 @@ function registerPreviewing(context: vscode.ExtensionContext) {
             songToolsPreviewProvider.update(previewUri);
         }
     }
-
+    
     vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
         previewDocument(e.document);
     });

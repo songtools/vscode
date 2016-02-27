@@ -5,6 +5,42 @@ import { getBinPath } from './path';
 import { SongToolsDocumentFormattingEditProvider, Formatter } from './format';
 import cp = require('child_process');
 
+const defaultStyle = `<style>
+.song {
+    margin: 2em;
+    white-space: nowrap;
+}
+        
+.song-title {
+    font-size: 1.5em;
+}
+
+.song-section {
+    margin: 2em 0;	
+}
+
+.song-section-kind {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.song-chorus {
+    padding-left: 1em;
+    font-style: italic;
+}
+
+.song-comment {
+    font-style: italic;
+    font-weight: bold;
+    margin: 0 0;	
+}
+
+.song-chord-line, .song-lyric-line {
+    white-space: pre;
+    font-family: monospace;
+}
+</style>`;
+
 class Previewer {
     private previewCommand = "songfmt";
     
@@ -27,7 +63,18 @@ class Previewer {
                         return reject(errorString);
                     }
                     
-                    let text = stdout.toString();
+                    let config = vscode.workspace.getConfiguration("songtools")
+                    let styles = config["previewStyles"];
+                    let text = "";
+                    if (!styles || styles.length == 0) {
+                        text = defaultStyle;
+                    } else {
+                        styles.forEach(style => {
+                            text += `<link rel="stylesheet" type="text/css" href="${style}" />`
+                        });
+                    }
+                    
+                    text += stdout.toString();
                     return resolve(text);
                     
                 } catch (e) {

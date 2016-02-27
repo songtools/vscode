@@ -21,11 +21,30 @@
 	],
 	"main": "./out/src/main",
 	"contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Song Tools configuration",
+            "properties": {
+                "songtools.formatOnSave": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Runs 'songfmt' on save."
+                },
+                "songtools.previewStyles": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Style(s) to use when previewing a song.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }},
         "languages": [
             {
                 "id": "chordsOverLyrics",
                 "extensions": [],
-                "aliases": ["Chords Over Lyrics"]
+                "aliases": ["Chords Over Lyrics"],
+                "firstLine": "^#title=.*"
             }],
 		"commands": [
             {
@@ -48,16 +67,5 @@
 	"devDependencies": {
 		"typescript": "^1.7.5",
 		"vscode": "^0.11.0"
-	},
-    "configuration": {
-        "type": "object",
-        "title": "Song Tools configuration",
-        "properties": {
-            "songtools.formatOnSave": {
-                "type": "boolean",
-                "default": true,
-                "description": "Runs 'songfmt' on save."
-            }
-        }
-    }
+	}
 }
