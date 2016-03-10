@@ -1,6 +1,6 @@
 'use strict';
 import * as vscode from 'vscode';
-import { CHORDSOVERLYRICS_MODE } from './mode';
+import { CHORDSOVERLYRICS_MODE, CHORDPRO_MODE } from './mode';
 import { SongToolsDocumentFormattingEditProvider, Formatter } from './format';
 import { SongToolsPreviewContentProvider } from './preview';
 
@@ -8,8 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     registerFormatting(context);
     registerPreviewing(context);
-
-
+    
     vscode.languages.setLanguageConfiguration(CHORDSOVERLYRICS_MODE.language, {
         comments: {
             lineComment: '//',
@@ -28,13 +27,14 @@ export function deactivate() {
 
 function registerFormatting(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(CHORDSOVERLYRICS_MODE, new SongToolsDocumentFormattingEditProvider()));
+    context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(CHORDPRO_MODE, new SongToolsDocumentFormattingEditProvider()));
 
     vscode.commands.registerCommand('songtools.format', () => {
         if (vscode.window.activeTextEditor == null) {
             return;
         }
 
-        vscode.window.showQuickPick([CHORDSOVERLYRICS_MODE.language]).then(pick => {
+        vscode.window.showQuickPick([CHORDSOVERLYRICS_MODE.language, CHORDPRO_MODE.language]).then(pick => {
             return new Formatter().formatDocument(pick, vscode.window.activeTextEditor.document);
         }).then(edits => {
             return vscode.window.activeTextEditor.edit(builder => {

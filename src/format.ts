@@ -34,13 +34,13 @@ class Edit {
 }
 
 export class Formatter {
-    private formatCommand = "songfmt";
+    private formatCommand = "songtool";
     
     public formatDocument(format: string, document: vscode.TextDocument): Thenable<vscode.TextEdit[]> {
         return new Promise((resolve, reject) => {
             let formatCommandBinPath = getBinPath(this.formatCommand);
             
-            let program = cp.execFile(formatCommandBinPath, ["--infmt", document.languageId, "--outfmt", format], (err, stdout, stderr) => {
+            let program = cp.execFile(formatCommandBinPath, ["--currentFormat", document.languageId, "--format", format], (err, stdout, stderr) => {
                 try {
                     if (err && (<any>err).code === 'ENOENT') {
                         vscode.window.showInformationMessage('The "' + formatCommandBinPath + '" command is not available.');

@@ -28,15 +28,7 @@
                 "songtools.formatOnSave": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Runs 'songfmt' on save."
-                },
-                "songtools.previewStyles": {
-                    "type": "array",
-                    "default": [],
-                    "description": "Style(s) to use when previewing a song.",
-                    "items": {
-                        "type": "string"
-                    }
+                    "description": "Formats the song on save."
                 }
             }},
         "languages": [
@@ -45,6 +37,11 @@
                 "extensions": [],
                 "aliases": ["Chords Over Lyrics"],
                 "firstLine": "^#title=.*"
+            },
+            {
+                "id": "chordpro",
+                "extensions": [".cho", ".chordpro", ".chopro" ],
+                "aliases": ["Chord Pro"]
             }],
 		"commands": [
             {

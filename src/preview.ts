@@ -6,13 +6,13 @@ import { SongToolsDocumentFormattingEditProvider, Formatter } from './format';
 import cp = require('child_process');
 
 class Previewer {
-    private previewCommand = "songfmt";
-    
+    private previewCommand = "songtool";
+
     public previewDocument(document: vscode.TextDocument): Thenable<string> {
         return new Promise((resolve, reject) => {
             let formatCommandBinPath = getBinPath(this.previewCommand);
-                        
-            let program = cp.execFile(formatCommandBinPath, ["--infmt", document.languageId, "--outfmt", "html"], (err, stdout, stderr) => {
+
+            let program = cp.execFile(formatCommandBinPath, ["--currentFormat", document.languageId, "--format", "html"], (err, stdout, stderr) => {
                 try {
                     if (err && (<any>err).code === 'ENOENT') {
                         vscode.window.showInformationMessage('The "' + formatCommandBinPath + '" command is not available.');
@@ -21,15 +21,15 @@ class Previewer {
                     if (err) {
                         return reject('Cannot format due to syntax errors.');
                     }
-                    
+
                     let errorString = stderr.toString();
-                    if(errorString !== "") {
+                    if (errorString !== "") {
                         return reject(errorString);
                     }
-                    
+
                     let text = stdout.toString();
                     return resolve(text);
-                    
+
                 } catch (e) {
                     reject(e);
                 }
@@ -42,19 +42,19 @@ class Previewer {
 export class SongToolsPreviewContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
     private previewer = new Previewer()
-    
+
     public provideTextDocumentContent(uri: vscode.Uri): Thenable<string> {
         return this.createHtml();
     }
-    
+
     get onDidChange(): vscode.Event<vscode.Uri> {
         return this._onDidChange.event;
     }
-    
+
     public update(uri: vscode.Uri) {
         this._onDidChange.fire(uri);
     }
-    
+
     private createHtml(): Thenable<string> {
         let editor = vscode.window.activeTextEditor;
         if (editor == null) {
@@ -66,15 +66,14 @@ export class SongToolsPreviewContentProvider implements vscode.TextDocumentConte
 
         return this.previewer.previewDocument(editor.document);
     }
-    
+
     private errorHtml(error: string): Thenable<string> {
-        return new Promise<string>((resolve, reject) => 
-        {
+        return new Promise<string>((resolve, reject) => {
             resolve(
                 `<body>
                     ${error}
                 </body>`);
         });
     }
-    
+
 }
